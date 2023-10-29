@@ -1,1 +1,4 @@
 blocks.db
+.env
+work_log.md
+output/*.md
