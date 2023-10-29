@@ -1,4 +1,5 @@
 blocks.db
 .env
 work_log.md
-output/*.md
+log_views/*.md
+__pycache__/

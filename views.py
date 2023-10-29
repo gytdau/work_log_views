@@ -9,9 +9,11 @@ dotenv.load_dotenv()  # Load the .env file containing the OpenAI API key
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+OUTPUT_DIR = "log_views"
+
 
 class InsightsView:
-    def process(self, header, content, db):
+    def process(self, header, content, db: Database):
         prompt = "---\nAbove is a work log. Discarding all irrelevant content, extract the information relating to a markdown list of long-term goals, insights, or ideas. Quote the relevant extracts and reproduce them exactly.\n\nIf there is nothing to extract, write 'None'.\n\n "
 
         response = openai.ChatCompletion.create(
@@ -24,10 +26,10 @@ class InsightsView:
 
         new_content = response.choices[0].message.content
 
-        db.insert_transformed_block(header, new_content, "insights")
+        db.insert_or_update_transformed_block(header, new_content, "insights")
 
     def output_file(self, db):
-        with open("output/insights.md", "w") as f:
+        with open(f"{OUTPUT_DIR}/insights.md", "w") as f:
             f.write("# Insights\n\n")
             for row in db.get_transformed_blocks("insights"):
                 f.write(f"{row[1]}\n\n")
@@ -35,7 +37,7 @@ class InsightsView:
 
 
 class TimeView:
-    def process(self, header, content, db):
+    def process(self, header, content, db: Database):
         prompt = """Above is a work log. Discarding all irrelevant content, exact the time log related information, such as information on what was being done and when. Include the time and duration of the event in the standard format:
 
 **XX:XXpm (X hours)** - "event"
@@ -54,10 +56,10 @@ Quote the relevant extracts and reproduce them exactly."""
 
         new_content = response.choices[0].message.content
 
-        db.insert_transformed_block(header, new_content, "time")
+        db.insert_or_update_transformed_block(header, new_content, "time")
 
     def output_file(self, db):
-        with open("output/time.md", "w") as f:
+        with open(f"{OUTPUT_DIR}/time.md", "w") as f:
             f.write("# Time\n\n")
             for row in db.get_transformed_blocks("time"):
                 f.write(f"{row[1]}\n\n")

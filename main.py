@@ -9,6 +9,9 @@ from tqdm import tqdm
 from db import Database
 from views import ViewRunner
 
+ALWAYS_REFRESH_FIRST_N_BLOCKS = 3
+ONLY_FIRST_N_BLOCKS = 15
+
 
 class MarkdownBlockProcessor:
     def __init__(self):
@@ -22,11 +25,11 @@ class MarkdownBlockProcessor:
         # Split by headers, assuming headers are denoted with '#' at the start
         blocks = re.split(r"\n(?=#+ .+\n)", content)
 
-        blocks = blocks[:15]
+        blocks = blocks[:ONLY_FIRST_N_BLOCKS]
 
         new_blocks = []
 
-        for block in blocks:
+        for i, block in enumerate(blocks):
             # Split block into header and content
             header, content = re.split(r"\n", block, 1)
             header = header.strip()
@@ -35,7 +38,9 @@ class MarkdownBlockProcessor:
             if header.startswith("# "):
                 continue
 
-            if self.db.insert_block(header, content):
+            inserted = self.db.insert_block(header, content)
+
+            if i < ALWAYS_REFRESH_FIRST_N_BLOCKS or inserted:
                 new_block = (header, content)
                 new_blocks += [new_block]
 
